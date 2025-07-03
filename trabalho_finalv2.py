@@ -59,7 +59,8 @@ class PipelineTrabalhoFinal:
         self.scaler = RobustScaler()
         self.le = LabelEncoder()
         
-        plt.switch_backend('Agg')  # Se não houver interface gráfica, para não travar
+        # Removido o uso de backend 'Agg' para permitir exibição interativa
+    #     plt.switch_backend('Agg')  
 
         print("🎓 TRABALHO FINAL - PIPELINE DE CIÊNCIA DE DADOS INICIALIZADO")
         print("=" * 80)
@@ -81,9 +82,12 @@ class PipelineTrabalhoFinal:
 
             # Plot 1: Contagem de linhas vs colunas
             plt.figure(figsize=(5, 3))
-            plt.bar(["Registros", "Colunas"], [self.dados_originais.shape[0], self.dados_originais.shape[1]], color=['blue', 'green'])
+            plt.bar(["Registros", "Colunas"], 
+                    [self.dados_originais.shape[0], self.dados_originais.shape[1]], 
+                    color=['blue', 'green'])
             plt.title("Dimensões do Dataset")
             plt.savefig("plot_etapa1_dim.png", dpi=100, bbox_inches='tight')
+            plt.show()  # Exibe o gráfico interativo
             plt.close()
 
             return True
@@ -115,13 +119,26 @@ class PipelineTrabalhoFinal:
         print("\nANÁLISE DA VARIÁVEL TARGET (rating):")
         print(self.dados_originais['rating'].value_counts())
 
-        # Plot 2: Distribuição do rating
-        plt.figure(figsize=(5,3))
-        sns.countplot(data=self.dados_originais, x='rating', order=self.dados_originais['rating'].value_counts().index)
-        plt.title("Distribuição de 'rating'")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig("plot_etapa2_rating.png", dpi=100, bbox_inches='tight')
+        # Plot 2: Distribuição do rating - CORRIGIDO
+        plt.figure(figsize=(12, 6))  # Aumentei o tamanho da figura
+        ax = sns.countplot(data=self.dados_originais, x='rating', 
+                          order=self.dados_originais['rating'].value_counts().index)
+        
+        # Rotacionar labels e ajustar espaçamento
+        plt.xticks(rotation=45, ha='right')  # Rotação de 45 graus, alinhamento à direita
+        plt.title("Distribuição de 'rating'", fontsize=14)
+        plt.xlabel("Rating", fontsize=12)
+        plt.ylabel("Contagem", fontsize=12)
+        
+        # Adicionar valores nas barras (opcional)
+        for p in ax.patches:
+            ax.annotate(f'{int(p.get_height())}', 
+                       (p.get_x() + p.get_width()/2., p.get_height()), 
+                       ha='center', va='bottom', fontsize=10)
+        
+        plt.tight_layout()  # Ajusta automaticamente o layout
+        plt.savefig("plot_etapa2_rating.png", dpi=150, bbox_inches='tight')
+        plt.show()
         plt.close()
 
         # Estatísticas descritivas
@@ -135,6 +152,7 @@ class PipelineTrabalhoFinal:
         sns.heatmap(corr, annot=False, cmap='Blues')
         plt.title("Matriz de Correlação (Bruta)")
         plt.savefig("plot_etapa2_corr.png", dpi=100, bbox_inches='tight')
+        plt.show()
         plt.close()
 
     def etapa3_limpeza_dados(self):
@@ -163,9 +181,11 @@ class PipelineTrabalhoFinal:
 
         # Plot 4: antes/depois da limpeza
         plt.figure(figsize=(5,3))
-        plt.bar(["Antes","Depois"], [registros_iniciais, len(self.dados_originais)], color=['red','green'])
+        plt.bar(["Antes","Depois"], [registros_iniciais, len(self.dados_originais)], 
+                color=['red','green'])
         plt.title("Registros antes/depois da limpeza")
         plt.savefig("plot_etapa3_limpeza.png", dpi=100, bbox_inches='tight')
+        plt.show()
         plt.close()
 
     def etapa4_conversao_tipos(self):
@@ -202,6 +222,7 @@ class PipelineTrabalhoFinal:
         self.dados_originais.select_dtypes(include=[np.number]).hist(figsize=(8,5))
         plt.tight_layout()
         plt.savefig("plot_etapa4_hist.png", dpi=100, bbox_inches='tight')
+        plt.show()
         plt.close()
 
     def etapa5_tratamento_outliers(self):
@@ -248,6 +269,7 @@ class PipelineTrabalhoFinal:
             plt.title(col)
         plt.tight_layout()
         plt.savefig("plot_etapa5_box.png", dpi=100, bbox_inches='tight')
+        plt.show()
         plt.close()
 
     def etapa6_codificacao_categoricas(self):
@@ -280,6 +302,7 @@ class PipelineTrabalhoFinal:
             sns.countplot(x='rating_encoded', data=self.dados_originais)
             plt.title("Distribuição de 'rating_encoded'")
             plt.savefig("plot_etapa6_cat.png", dpi=100, bbox_inches='tight')
+            plt.show()
             plt.close()
 
     def etapa7_escalonamento_variaveis(self):
@@ -293,7 +316,7 @@ class PipelineTrabalhoFinal:
         print("-" * 50)
 
         # Selecionar features que NÃO causem vazamento
-        # (Removendo 'positive_ratio' - suspeita de vazamento)
+        # (Removendo 'positive_ratio' – suspeita de vazamento)
         colunas = []
         for c in ['user_reviews','price_final','win','mac','linux','steam_deck']:
             if c in self.dados_originais.columns:
@@ -307,12 +330,10 @@ class PipelineTrabalhoFinal:
         print(f"Dimensões X: {self.X_final.shape}")
         print(f"Dimensões y: {self.y_final.shape}")
 
-        # Aqui apenas instanciamos no init (self.scaler).
-        # Aplicaremos após dividir treino/teste
-
-        # Plot 9: Pairplot parcial (opcional)
+        # Exemplo de plot: pairplot para visualização
         sns.pairplot(self.dados_originais, vars=colunas, hue='rating_encoded', corner=True, height=3)
         plt.savefig("plot_etapa7_pair.png", dpi=100, bbox_inches='tight')
+        plt.show()
         plt.close()
 
     def etapa8_selecao_atributos(self):
@@ -337,7 +358,6 @@ class PipelineTrabalhoFinal:
         for p in plats:
             if p in X_enhanced.columns:
                 X_enhanced['multi_platform_score'] += X_enhanced[p]
-
         print("   multi_platform_score: suporte multi-plataforma")
 
         # log_reviews
@@ -351,6 +371,7 @@ class PipelineTrabalhoFinal:
         sns.heatmap(cor_mat, cmap='RdBu', center=0)
         plt.title("Correlação após criação de atributos")
         plt.savefig("plot_etapa8_attr.png", dpi=100, bbox_inches='tight')
+        plt.show()
         plt.close()
 
         # Atualizar X_final
@@ -388,7 +409,7 @@ class PipelineTrabalhoFinal:
         print(f"   Aplicar PCA: {aplicar}")
         print("-" * 50)
         if aplicar:
-            print("   (EXEMPLO) PCA com 95% de variância explicada - não implementado agora")
+            print("   (EXEMPLO) PCA com 95% de variância explicada – não implementado agora")
         else:
             print("   PCA não aplicado (desnecessário para este dataset)")
 
@@ -408,12 +429,12 @@ class PipelineTrabalhoFinal:
             X, y, test_size=test_size, random_state=random_state, stratify=y
         )
 
-        # Aplicar SMOTE só no treino
+        # Aplicando SMOTE apenas no treino
         print(f"\nAplicando SMOTE apenas no conjunto de treino...")
         smote = SMOTE(random_state=42, k_neighbors=5)
         X_train_bal, y_train_bal = smote.fit_resample(self.X_train, self.y_train)
 
-        # Escalar
+        # Escalando
         self.X_train_scaled = self.scaler.fit_transform(X_train_bal)
         self.X_test_scaled = self.scaler.transform(self.X_test)
 
@@ -538,7 +559,7 @@ class PipelineTrabalhoFinal:
             print(f"Ajustando hiperparâmetros de {modelo_nome} (Exemplo simplificado)")
         else:
             print("❌ Nenhum modelo para ajustar.")
-    
+
     def etapa15_testes_finais(self):
         """
         ETAPA 15: TESTES FINAIS E VALIDAÇÃO
@@ -554,7 +575,7 @@ class PipelineTrabalhoFinal:
             self.resultados_finais['metricas'] = {'f1_score': final_f1}
         else:
             print("❌ Nenhum modelo definido como melhor.")
-    
+
     def gerar_relatorio_final(self):
         """
         Exibe um sumário no final
